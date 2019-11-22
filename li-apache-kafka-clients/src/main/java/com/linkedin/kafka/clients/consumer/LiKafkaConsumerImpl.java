@@ -108,23 +108,32 @@ public class LiKafkaConsumerImpl<K, V> implements LiKafkaConsumer<K, V> {
     this(new LiKafkaConsumerConfig(configs), keyDeserializer, valueDeserializer, largeMessageSegmentDeserializer, consumerAuditor);
   }
 
+  private static final ByteArrayDeserializer BYTE_ARRAY_DESERIALIZER = new ByteArrayDeserializer();
+
   @SuppressWarnings("unchecked")
-  private LiKafkaConsumerImpl(LiKafkaConsumerConfig configs,
+  LiKafkaConsumerImpl(LiKafkaConsumerConfig configs,
+                      Deserializer<K> keyDeserializer,
+                      Deserializer<V> valueDeserializer,
+                      Deserializer<LargeMessageSegment> largeMessageSegmentDeserializer,
+                      Auditor<K, V> consumerAuditor) {
+    // We need to set the auto commit to false in KafkaConsumer because it is not large message aware.
+    this(configs, keyDeserializer, valueDeserializer, largeMessageSegmentDeserializer, consumerAuditor, new KafkaConsumer<>(configs.configForVanillaConsumer(), BYTE_ARRAY_DESERIALIZER, BYTE_ARRAY_DESERIALIZER));
+  }
+
+  @SuppressWarnings("unchecked")
+  LiKafkaConsumerImpl(LiKafkaConsumerConfig configs,
                               Deserializer<K> keyDeserializer,
                               Deserializer<V> valueDeserializer,
                               Deserializer<LargeMessageSegment> largeMessageSegmentDeserializer,
-                              Auditor<K, V> consumerAuditor) {
+                              Auditor<K, V> consumerAuditor,
+                              Consumer<byte[], byte[]> kafkaConsumer) {
 
     _autoCommitEnabled = configs.getBoolean(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG);
     _autoCommitInterval = configs.getInt(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG);
     _offsetResetStrategy =
         LiOffsetResetStrategy.valueOf(configs.getString(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG).toUpperCase(Locale.ROOT));
     _lastAutoCommitMs = System.currentTimeMillis();
-    // We need to set the auto commit to false in KafkaConsumer because it is not large message aware.
-    ByteArrayDeserializer byteArrayDeserializer = new ByteArrayDeserializer();
-    _kafkaConsumer = new KafkaConsumer<>(configs.configForVanillaConsumer(),
-                                         byteArrayDeserializer,
-                                         byteArrayDeserializer);
+    _kafkaConsumer = kafkaConsumer;
     _clientId = LiKafkaClientsUtils.getClientId(_kafkaConsumer);
     _skippedRecordsMetricName = new MetricName(
         "records-skipped",

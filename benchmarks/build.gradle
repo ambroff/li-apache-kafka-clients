@@ -1,0 +1,17 @@
+/*
+ * Copyright 2019 LinkedIn Corp.
+ * Licensed under the BSD 2-Clause License (the "License"). 
+ * See License in the project root for license information.
+ */
+plugins {
+    id "java"
+    id "idea"
+}
+
+dependencies {
+    compile project(':li-apache-kafka-clients')
+    compile "com.linkedin.kafka:kafka-clients:${rootProject.ext.liKafkaVersion}"
+
+    compile 'org.openjdk.jmh:jmh-core:1.22'
+    compile 'org.openjdk.jmh:jmh-generator-annprocess:1.22'
+}

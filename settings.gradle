@@ -20,7 +20,7 @@ apply plugin: 'net.vivin.gradle-semantic-build-versioning'
 //otherwise it defaults to the folder name
 rootProject.name = 'li-apache-kafka-clients'
 
-include 'li-apache-kafka-clients', 'kafka-test-harness', 'integration-tests'
+include 'li-apache-kafka-clients', 'kafka-test-harness', 'integration-tests', 'benchmarks'
 
 def gradleVer = GradleVersion.current()
 if (gradleVer < GradleVersion.version("5.2.1")) {
